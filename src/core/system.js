@@ -19,6 +19,16 @@ function createStoreWithMiddleware(rootReducer, initialState, getSystem) {
     //   stateTransformer: state => state && state.toJS()
     // } ),
     // errorLog(getSystem), Need to properly handle errors that occur during a render. Ie: let them be...
+
+    /* develblock:start */
+    // Measure actions
+    () => next => action => {
+      require("root/src/perf").start("action:"+action.type)
+      const res = next(action)
+      require("root/src/perf").stop("action:"+action.type)
+      return res
+    },
+    /* develblock:end */
     systemThunkMiddleware( getSystem )
   ]
 
