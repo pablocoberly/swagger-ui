@@ -48,6 +48,8 @@ export default class Auths extends React.Component {
     authActions.showDefinitions(false)
   }
 
+
+
   render() {
     let { definitions, getComponent, authSelectors, errSelectors } = this.props
     const AuthItem = getComponent("AuthItem")
@@ -96,6 +98,8 @@ export default class Auths extends React.Component {
             <p>Scopes are used to grant an application different levels of access to data on behalf of the end user. Each API may declare one or more scopes.</p>
             <p>API requires the following scopes. Select which ones you want to grant to Swagger UI.</p>
           </div>
+
+
             {
               definitions.filter( schema => schema.get("type") === "oauth2")
                 .map( (schema, name) =>{

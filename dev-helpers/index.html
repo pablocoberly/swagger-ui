@@ -87,16 +87,24 @@
       layout: "StandaloneLayout"
     })
 
-    window.ui = ui
-
-    ui.initOAuth({
-      clientId: "your-client-id",
-      clientSecret: "your-client-secret-if-required",
-      realm: "your-realms",
-      appName: "your-app-name",
+    ui.initOAuth([{
+      clientId: "client-id-1",
+      clientSecret: "client-secret-1",
+      realm: "realms-1",
+      appName: "app-1",
       scopeSeparator: " ",
       additionalQueryStringParams: {}
-    })
+    }, {
+      clientId: "client-id-2",
+      clientSecret: "client-secret-2",
+      realm: "realms-2",
+      appName: "app-2",
+      scopeSeparator: " ",
+      additionalQueryStringParams: {}
+    }])
+
+    window.ui = ui
+
   }
 </script>
 </body>
