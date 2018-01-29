@@ -105,7 +105,7 @@ export const getConfigs = createSelector(
   getAllConfigs,
   getSelectedAppName,
   (configs, selectedAppName) => {
-    let config = configs.find((value) => value.appName === selectedAppName)
+    let config = configs.filter(value => value.appName === selectedAppName)[0]
     return config
   }
 )

@@ -71,7 +71,7 @@
 <script src="./swagger-ui-standalone-preset.js"> </script>
 <script>
 window.onload = function() {
-  
+
   // Build a system
   const ui = SwaggerUIBundle({
     url: "http://petstore.swagger.io/v2/swagger.json",
@@ -86,6 +86,22 @@ window.onload = function() {
     ],
     layout: "StandaloneLayout"
   })
+
+  ui.initOAuth([{
+    clientId: "client-id-1",
+    clientSecret: "client-secret-1",
+    realm: "realms-1",
+    appName: "app-1",
+    scopeSeparator: " ",
+    additionalQueryStringParams: {}
+  }, {
+    clientId: "client-id-2",
+    clientSecret: "client-secret-2",
+    realm: "realms-2",
+    appName: "app-2",
+    scopeSeparator: " ",
+    additionalQueryStringParams: {}
+  }])
 
   window.ui = ui
 }
