@@ -15,6 +15,8 @@ before_deploy:
   - npm run build
 env:
   - DOCKER_IMAGE_NAME=swaggerapi/swagger-ui
+script:
+  - npm test
 deploy:
   - provider: npm
     email: apiteam@swagger.io
@@ -34,10 +36,10 @@ deploy:
       node: '6.9'
 after_success:
   - if [ $DOCKER_HUB_USERNAME ]; then
-      docker login --email=$DOCKER_HUB_EMAIL --username=$DOCKER_HUB_USERNAME --password=$DOCKER_HUB_PASSWORD;
+      docker login --username=$DOCKER_HUB_USERNAME --password=$DOCKER_HUB_PASSWORD;
 
       if [ ! -z "$TRAVIS_TAG" ]; then
-        DOCKER_IMAGE_TAG=$TRAVIS_TAG;
+        DOCKER_IMAGE_TAG=${TRAVIS_TAG#?};
       else
         DOCKER_IMAGE_TAG=unstable;
       fi;
@@ -52,3 +54,5 @@ after_success:
         docker push $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG;
       fi;
     fi;
+  - npm run build-bundle
+  - bundlesize

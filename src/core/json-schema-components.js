@@ -1,7 +1,10 @@
 import React, { PureComponent, Component } from "react"
 import PropTypes from "prop-types"
 import { List, fromJS } from "immutable"
+import cx from "classnames"
 import ImPropTypes from "react-immutable-proptypes"
+import DebounceInput from "react-debounce-input"
+import { getSampleSchema } from "core/utils"
 //import "less/json-schema-form"
 
 const noop = ()=> {}
@@ -14,6 +17,7 @@ const JsonSchemaPropShape = {
   schema: PropTypes.object,
   errors: ImPropTypes.list,
   required: PropTypes.bool,
+  dispatchInitialValue: PropTypes.bool,
   description: PropTypes.any
 }
 
@@ -30,6 +34,13 @@ export class JsonSchemaForm extends Component {
 
   static propTypes = JsonSchemaPropShape
   static defaultProps = JsonSchemaDefaultProps
+
+  componentDidMount() {
+    const { dispatchInitialValue, value, onChange } = this.props
+    if(dispatchInitialValue) {
+      onChange(value)
+    }
+  }
 
   render() {
     let { schema, errors, value, onChange, getComponent, fn } = this.props
@@ -79,10 +90,13 @@ export class JsonSchema_string extends Component {
                      disabled={isDisabled}/>)
     }
     else {
-      return (<Input type={ schema.format === "password" ? "password" : "text" }
+      return (<DebounceInput
+                     type={ schema.format === "password" ? "password" : "text" }
                      className={ errors.length ? "invalid" : ""}
                      title={ errors.length ? errors : ""}
                      value={value}
+                     minLength={0}
+                     debounceTimeout={350}
                      placeholder={description}
                      onChange={ this.onChange }
                      disabled={isDisabled}/>)
@@ -97,7 +111,7 @@ export class JsonSchema_array extends PureComponent {
 
   constructor(props, context) {
     super(props, context)
-    this.state = {value: props.value}
+    this.state = { value: valueOrEmptyList(props.value)}
   }
 
   componentWillReceiveProps(props) {
@@ -121,7 +135,7 @@ export class JsonSchema_array extends PureComponent {
 
   addItem = () => {
     this.setState(state => {
-      state.value = state.value || List()
+      state.value = valueOrEmptyList(state.value)
       return {
         value: state.value.push("")
       }
@@ -160,7 +174,7 @@ export class JsonSchema_array extends PureComponent {
 
     return (
       <div>
-        { !value || value.count() < 1 ? null :
+        { !value || !value.count || value.count() < 1 ? null :
           value.map( (item,i) => {
             let schema = Object.assign({}, itemSchema)
             if ( errors.length ) {
@@ -187,7 +201,7 @@ export class JsonSchema_boolean extends Component {
 
   onEnumChange = (val) => this.props.onChange(val)
   render() {
-    let { getComponent, value, errors, schema } = this.props
+    let { getComponent, value, errors, schema, required } = this.props
     errors = errors.toJS ? errors.toJS() : []
 
     const Select = getComponent("Select")
@@ -196,7 +210,61 @@ export class JsonSchema_boolean extends Component {
                     title={ errors.length ? errors : ""}
                     value={ String(value) }
                     allowedValues={ fromJS(schema.enum || ["true", "false"]) }
-                    allowEmptyValue={ !this.props.required }
+                    allowEmptyValue={ !schema.enum || !required }
                     onChange={ this.onEnumChange }/>)
   }
+}
+
+export class JsonSchema_object extends PureComponent {
+  constructor() {
+    super()
+  }
+
+  static propTypes = JsonSchemaPropShape
+  static defaultProps = JsonSchemaDefaultProps
+
+  componentDidMount() {
+    if(!this.props.value && this.props.schema) {
+      this.resetValueToSample()
+    }
+  }
+
+  resetValueToSample = () => {
+    this.onChange(getSampleSchema(this.props.schema) )
+  }
+
+  onChange = (value) => {
+    this.props.onChange(value)
+  }
+
+  handleOnChange = e => {
+    const inputValue = e.target.value
+
+    this.onChange(inputValue)
+  }
+
+  render() {
+    let {
+      getComponent,
+      value,
+      errors
+    } = this.props
+
+    const TextArea = getComponent("TextArea")
+
+    return (
+      <div>
+        <TextArea
+          className={cx({ invalid: errors.size })}
+          title={ errors.size ? errors.join(", ") : ""}
+          value={value}
+          onChange={ this.handleOnChange }/>
+      </div>
+    )
+
+  }
+}
+
+function valueOrEmptyList(value) {
+  return List.isList(value) ? value : List()
 }

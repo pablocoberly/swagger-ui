@@ -1,7 +1,7 @@
 import React, { PureComponent } from "react"
 import PropTypes from "prop-types"
 import { fromJS } from "immutable"
-import { getSampleSchema } from "core/utils"
+import { getSampleSchema, stringify } from "core/utils"
 
 const NOOP = Function.prototype
 
@@ -27,6 +27,7 @@ export default class RequestBodyEditor extends PureComponent {
 
     this.state = {
       isEditBox: false,
+      userDidModify: false,
       value: ""
     }
   }
@@ -59,11 +60,18 @@ export default class RequestBodyEditor extends PureComponent {
     this.onChange(this.sample(explicitMediaType))
   }
 
+  resetValueToSample = (explicitMediaType) => {
+    this.setState({ userDidModify: false })
+    this.setValueToSample(explicitMediaType)
+  }
+
   sample = (explicitMediaType) => {
     let { requestBody, mediaType } = this.props
-    let schema = requestBody.getIn(["content", explicitMediaType || mediaType, "schema"]).toJS()
+    let mediaTypeValue = requestBody.getIn(["content", explicitMediaType || mediaType])
+    let schema = mediaTypeValue.get("schema").toJS()
+    let mediaTypeExample = mediaTypeValue.get("example") !== undefined ? stringify(mediaTypeValue.get("example")) : null
 
-    return getSampleSchema(schema, explicitMediaType || mediaType, {
+    return mediaTypeExample || getSampleSchema(schema, explicitMediaType || mediaType, {
       includeWriteOnly: true
     })
   }
@@ -78,6 +86,7 @@ export default class RequestBodyEditor extends PureComponent {
     const isJson = /json/i.test(mediaType)
     const inputValue = isJson ? e.target.value.trim() : e.target.value
 
+    this.setState({ userDidModify: true })
     this.onChange(inputValue)
   }
 
@@ -87,13 +96,14 @@ export default class RequestBodyEditor extends PureComponent {
     let {
       isExecute,
       getComponent,
+      mediaType,
     } = this.props
 
     const Button = getComponent("Button")
     const TextArea = getComponent("TextArea")
     const HighlightCode = getComponent("highlightCode")
 
-    let { value, isEditBox } = this.state
+    let { value, isEditBox, userDidModify } = this.state
 
     return (
       <div className="body-param">
@@ -104,14 +114,18 @@ export default class RequestBodyEditor extends PureComponent {
                                value={ value }/>)
         }
         <div className="body-param-options">
-          {
-            !isExecute ? null
-                       : <div className="body-param-edit">
-                        <Button className={isEditBox ? "btn cancel body-param__example-edit" : "btn edit body-param__example-edit"}
-                                 onClick={this.toggleIsEditBox}>{ isEditBox ? "Cancel" : "Edit"}
-                         </Button>
-                         </div>
-          }
+          <div className="body-param-edit">
+            {
+              !isExecute ? null
+                         : <Button className={isEditBox ? "btn cancel body-param__example-edit" : "btn edit body-param__example-edit"}
+                                   onClick={this.toggleIsEditBox}>{ isEditBox ? "Cancel" : "Edit"}
+                           </Button>
+
+            }
+            { userDidModify &&
+              <Button className="btn ml3" onClick={() => { this.resetValueToSample(mediaType) }}>Reset</Button>
+            }
+          </div>
         </div>
 
       </div>

@@ -10,6 +10,7 @@ export default class Model extends ImmutablePureComponent {
     getConfigs: PropTypes.func.isRequired,
     specSelectors: PropTypes.object.isRequired,
     name: PropTypes.string,
+    displayName: PropTypes.string,
     isRef: PropTypes.bool,
     required: PropTypes.bool,
     expandDepth: PropTypes.number,
@@ -33,7 +34,7 @@ export default class Model extends ImmutablePureComponent {
   }
 
   render () {
-    let { getComponent, getConfigs, specSelectors, schema, required, name, isRef, specPath } = this.props
+    let { getComponent, getConfigs, specSelectors, schema, required, name, isRef, specPath, displayName } = this.props
     const ObjectModel = getComponent("ObjectModel")
     const ArrayModel = getComponent("ArrayModel")
     const PrimitiveModel = getComponent("PrimitiveModel")
@@ -47,6 +48,17 @@ export default class Model extends ImmutablePureComponent {
     // If we weren't passed a `schema` but have a ref, grab the schema from the ref
     if ( !schema && $$ref ) {
       schema = this.getRefSchema( name )
+    }
+
+    if(!schema) {
+      return <span className="model model-title">
+              <span className="model-title__text">{ displayName || name }</span>
+              <img src={require("core/../img/rolling-load.svg")} height={"20px"} width={"20px"} style={{
+                  marginLeft: "1em",
+                  position: "relative",
+                  bottom: "0px"
+                }} />
+            </span>
     }
 
     const deprecated = specSelectors.isOAS3() && schema.get("deprecated")

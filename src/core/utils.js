@@ -10,7 +10,7 @@ import { memoizedSampleFromSchema, memoizedCreateXMLExample } from "core/plugins
 import win from "./window"
 import cssEscape from "css.escape"
 
-const DEFAULT_REPONSE_KEY = "default"
+const DEFAULT_RESPONSE_KEY = "default"
 
 export const isImmutable = (maybe) => Im.Iterable.isIterable(maybe)
 
@@ -37,7 +37,7 @@ export function objectify (thing) {
   if(!isObject(thing))
     return {}
   if(isImmutable(thing))
-    return thing.toObject()
+    return thing.toJS()
   return thing
 }
 
@@ -128,7 +128,7 @@ export function systemThunkMiddleware(getSystem) {
 
 export function defaultStatusCode ( responses ) {
   let codes = responses.keySeq()
-  return codes.contains(DEFAULT_REPONSE_KEY) ? DEFAULT_REPONSE_KEY : codes.filter( key => (key+"")[0] === "2").sort().first()
+  return codes.contains(DEFAULT_RESPONSE_KEY) ? DEFAULT_RESPONSE_KEY : codes.filter( key => (key+"")[0] === "2").sort().first()
 }
 
 
@@ -193,7 +193,7 @@ export function highlight (el) {
     // running through characters and highlighting
     while (prev2 = prev1,
       // escaping if needed (with except for comments)
-      // pervious character will not be therefore
+      // previous character will not be therefore
       // recognized as a token finalize condition
       prev1 = tokenType < 7 && prev1 == "\\" ? 1 : chr
       ) {
@@ -350,7 +350,7 @@ export function extractFileNameFromContentDispositionHeader(value){
   if (responseFilename !== null && responseFilename.length > 1) {
     return responseFilename[1]
   }
-  return null  
+  return null
 }
 
 // PascalCase, aka UpperCamelCase
@@ -445,7 +445,7 @@ export const validateDateTime = (val) => {
 
 export const validateGuid = (val) => {
     val = val.toString().toLowerCase()
-    if (!/^[{(]?[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[)}]?$/.test(val)) {
+    if (!/^[{(]?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[)}]?$/.test(val)) {
         return "Value must be a Guid"
     }
 }
@@ -503,7 +503,30 @@ export const validateParam = (param, isXml, isOAS3 = false) => {
     let numberCheck = type === "number" && (value || value === 0)
     let integerCheck = type === "integer" && (value || value === 0)
 
-    if ( required && !(stringCheck || arrayCheck || listCheck || fileCheck || booleanCheck || numberCheck || integerCheck) ) {
+    let oas3ObjectCheck = false
+
+    if(false || isOAS3 && type === "object") {
+      if(typeof value === "object") {
+        oas3ObjectCheck = true
+      } else if(typeof value === "string") {
+        try {
+          JSON.parse(value)
+          oas3ObjectCheck = true
+        } catch(e) {
+          errors.push("Parameter string value must be valid JSON")
+          return errors
+        }
+      }
+    }
+
+    const allChecks = [
+      stringCheck, arrayCheck, listCheck, fileCheck, booleanCheck,
+      numberCheck, integerCheck, oas3ObjectCheck
+    ]
+
+    const passedAnyCheck = allChecks.some(v => !!v)
+
+    if ( required && !passedAnyCheck ) {
       errors.push("Required field is not provided")
       return errors
     }
@@ -559,7 +582,7 @@ export const validateParam = (param, isXml, isOAS3 = false) => {
     } else if ( type === "array" ) {
       let itemType
 
-      if ( !value.count() ) { return errors }
+      if ( !listCheck || !value.count() ) { return errors }
 
       itemType = paramDetails.getIn(["items", "type"])
 
@@ -605,7 +628,9 @@ export const getSampleSchema = (schema, contentType="", config={}) => {
     return memoizedCreateXMLExample(schema, config)
   }
 
-  return JSON.stringify(memoizedSampleFromSchema(schema, config), null, 2)
+  const res = memoizedSampleFromSchema(schema, config)
+
+  return typeof res === "object" ? JSON.stringify(res, null, 2) : res
 }
 
 export const parseSearch = () => {
@@ -623,11 +648,17 @@ export const parseSearch = () => {
         continue
       }
       i = params[i].split("=")
-      map[decodeURIComponent(i[0])] = decodeURIComponent(i[1])
+      map[decodeURIComponent(i[0])] = (i[1] && decodeURIComponent(i[1])) || ""
     }
   }
 
   return map
+}
+
+export const serializeSearch = (searchMap) => {
+  return Object.keys(searchMap).map(k => {
+    return encodeURIComponent(k) + "=" + encodeURIComponent(searchMap[k])
+  }).join("&")
 }
 
 export const btoa = (str) => {
@@ -706,3 +737,55 @@ export const createDeepLinkPath = (str) => typeof str == "string" || str instanc
 export const escapeDeepLinkPath = (str) => cssEscape( createDeepLinkPath(str) )
 
 export const getExtensions = (defObj) => defObj.filter((v, k) => /^x-/.test(k))
+export const getCommonExtensions = (defObj) => defObj.filter((v, k) => /^pattern|maxLength|minLength|maximum|minimum/.test(k))
+
+// Deeply strips a specific key from an object.
+//
+// `predicate` can be used to discriminate the stripping further,
+// by preserving the key's place in the object based on its value.
+export function deeplyStripKey(input, keyToStrip, predicate = () => true) {
+  if(typeof input !== "object" || Array.isArray(input) || input === null || !keyToStrip) {
+    return input
+  }
+
+  const obj = Object.assign({}, input)
+
+  Object.keys(obj).forEach(k => {
+    if(k === keyToStrip && predicate(obj[k], k)) {
+      delete obj[k]
+      return
+    }
+    obj[k] = deeplyStripKey(obj[k], keyToStrip, predicate)
+  })
+
+  return obj
+}
+
+export function stringify(thing) {
+  if (typeof thing === "string") {
+    return thing
+  }
+
+  if (thing.toJS) {
+    thing = thing.toJS()
+  }
+
+  if (typeof thing === "object" && thing !== null) {
+    try {
+      return JSON.stringify(thing, null, 2)
+    }
+    catch (e) {
+      return String(thing)
+    }
+  }
+
+  return thing.toString()
+}
+
+export function numberToString(thing) {
+  if(typeof thing === "number") {
+    return thing.toString()
+  }
+
+  return thing
+}
