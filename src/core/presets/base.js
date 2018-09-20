@@ -76,6 +76,7 @@ import VersionPragmaFilter from "core/components/version-pragma-filter"
 import VersionStamp from "core/components/version-stamp"
 import DeepLink from "core/components/deep-link"
 import SvgAssets from "core/components/svg-assets"
+import DeveloperApps from "core/components/developer-apps"
 
 import Markdown from "core/components/providers/markdown"
 
@@ -150,7 +151,8 @@ export default function() {
       DeepLink,
       InfoUrl,
       InfoBasePath,
-      SvgAssets
+      SvgAssets,
+      DeveloperApps
     }
   }
 
