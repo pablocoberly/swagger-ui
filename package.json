@@ -1,6 +1,6 @@
 {
   "name": "swagger-ui",
-  "version": "3.18.3",
+  "version": "3.20.0",
   "main": "dist/swagger-ui.js",
   "repository": "git@github.com:swagger-api/swagger-ui.git",
   "contributors": [
@@ -14,6 +14,7 @@
   ],
   "license": "Apache-2.0",
   "scripts": {
+    "automated-release": "release-it --config ./release/.release-it.json",
     "build": "run-p --aggregate-output build-core build-bundle build-standalone",
     "build-bundle": "webpack --config webpack-dist-bundle.config.js --colors",
     "build-core": "webpack --config webpack-dist.config.js --colors",
@@ -30,7 +31,7 @@
     "lint-fix": "eslint --cache --ext '.js,.jsx' src test --fix",
     "test": "run-s just-test-in-node e2e-cypress lint-errors",
     "test-in-node": "run-s lint-errors just-test-in-node",
-    "just-test-in-node": "mocha --require test/setup.js --recursive --compilers js:babel-core/register --require source-map-support test/core test/components test/bugs test/swagger-ui-dist-package test/xss",
+    "just-test-in-node": "mocha --require test/setup.js --recursive --compilers js:babel-core/register --require source-map-support test/core test/components test/bugs test/docker test/swagger-ui-dist-package test/xss",
     "just-check-coverage": "nyc npm run just-test-in-node",
     "test-e2e-cypress": "cypress run",
     "test-e2e-selenium": "sleep 3 && nightwatch test/e2e-selenium/scenarios/ --config test/e2e-selenium/nightwatch.json",
@@ -47,6 +48,8 @@
   "dependencies": {
     "@braintree/sanitize-url": "^2.0.2",
     "@kyleshockey/js-yaml": "^1.0.1",
+    "@kyleshockey/object-assign-deep": "^0.4.2",
+    "@kyleshockey/xml": "^1.0.2",
     "base64-js": "^1.2.0",
     "classnames": "^2.2.5",
     "core-js": "^2.5.1",
@@ -73,9 +76,8 @@
     "remarkable": "^1.7.1",
     "reselect": "^2.5.4",
     "serialize-error": "^2.1.0",
-    "swagger-client": "^3.8.19",
+    "swagger-client": "^3.8.22",
     "url-parse": "^1.1.8",
-    "xml": "1.0.1",
     "xml-but-prettier": "^1.0.1",
     "zenscroll": "^4.0.2"
   },
@@ -126,6 +128,7 @@
     "postcss-loader": "^2.1.5",
     "raw-loader": "0.5.1",
     "react-test-renderer": "^15.5.4",
+    "release-it": "^7.6.1",
     "rimraf": "^2.6.0",
     "sass-loader": "^7.0.1",
     "selenium-server-standalone-jar": "3.12.0",
@@ -138,6 +141,7 @@
     "webpack": "^3.1.0",
     "webpack-bundle-size-analyzer": "^2.5.0",
     "webpack-cli": "^2.0.4",
+    "webpack-dev-server": "^2.11.1",
     "worker-loader": "^1.1.1"
   },
   "config": {
@@ -148,9 +152,6 @@
     "last 2 versions",
     "IE 11"
   ],
-  "optionalDependencies": {
-    "webpack-dev-server": "^2.11.1"
-  },
   "nyc": {
     "all": true,
     "include": [

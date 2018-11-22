@@ -16,7 +16,6 @@ export default class SchemesContainer extends React.Component {
     const securityDefinitions = specSelectors.securityDefinitions()
 
     const Col = getComponent("Col")
-    const AuthorizeBtn = getComponent("authorizeBtn", true)
     const Schemes = getComponent("schemes")
     let DeveloperApps = getComponent("DeveloperApps", true)
 
@@ -34,9 +33,6 @@ export default class SchemesContainer extends React.Component {
               ) : null}
               {securityDefinitions ? (
                 <DeveloperApps/>
-              ) : null}
-              {securityDefinitions ? (
-                <AuthorizeBtn/>
               ) : null}
             </Col>
           </div>
