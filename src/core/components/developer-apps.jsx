@@ -28,7 +28,7 @@ export default class DeveloperApps extends React.Component {
     if (configs.length > 0) {
       return (
         <div className="developer-apps-container">
-          <label htmlFor="selectedAppName"><span className="selectAppNameTitle">Choose an app to authorize:</span>
+          <label htmlFor="selectedAppName"><span className="selectAppNameTitle">Choose an app to authorize</span>
             <select name="selectedAppName" onChange={this.onSelectedAppNameChange} value={authSelectors.getSelectedAppName()}>
               {
                 configs

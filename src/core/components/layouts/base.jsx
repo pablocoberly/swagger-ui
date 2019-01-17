@@ -28,6 +28,8 @@ export default class BaseLayout extends React.Component {
     const SchemesContainer = getComponent("SchemesContainer", true)
     const AuthorizeBtnContainer = getComponent("AuthorizeBtnContainer", true)
     const FilterContainer = getComponent("FilterContainer", true)
+    const DeveloperApps = getComponent("DeveloperApps", true)
+
     let isSwagger2 = specSelectors.isSwagger2()
     let isOAS3 = specSelectors.isOAS3()
 
@@ -73,6 +75,7 @@ export default class BaseLayout extends React.Component {
                 <Col className="schemes wrapper" mobile={12}>
                   {hasServers ? (<ServersContainer />) : null}
                   {hasSchemes ? (<SchemesContainer />) : null}
+                  {hasSecurityDefinitions ? (<DeveloperApps />) : null}
                   {hasSecurityDefinitions ? (<AuthorizeBtnContainer />) : null}
                 </Col>
               </div>
